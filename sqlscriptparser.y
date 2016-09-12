@@ -50,7 +50,7 @@ instrucao: CREATE_TABLE OWNER_OBJECT FIM_COMANDO  {
 													  //printf("select case count(1) when 1 then 'ok' else 'error' end from dba_tables t where t.owner='%s' and t.table_name='%s';\n",owner,object); 
 													  }
 													  
-	| CREATE_INDEX OWNER_OBJECT OWNER_OBJECT FIM_COMANDO      { 
+	| CREATE_INDEX OWNER_OBJECT OWNER_OBJECT COLUMN FIM_COMANDO      { 
 												  char *owner;
 												  char *object;
 												  owner = strtok ($2,".");
@@ -64,7 +64,7 @@ instrucao: CREATE_TABLE OWNER_OBJECT FIM_COMANDO  {
 												  printf("\n--CREATE INDEX\n%s\n",str);
 												  //printf("select case count(1) when 1 then 'ok' else 'error' end from dba_indexes t where t.owner='%s' and t.index_name='%s';\n",owner,object); 
 												  }
-	| ALTER_TABLE OWNER_OBJECT ADD_CONSTRAINT FK_NAME  FK OWNER_OBJECT FIM_COMANDO { 
+	| ALTER_TABLE OWNER_OBJECT ADD_CONSTRAINT FK_NAME  FK COLUMN OWNER_OBJECT COLUMN FIM_COMANDO { 
 												  char *owner;
 												  char *object;
 												  owner = strtok ($2,".");
@@ -112,7 +112,7 @@ instrucao: CREATE_TABLE OWNER_OBJECT FIM_COMANDO  {
 	| FIM_COMANDO 					{} 
 	| OWNER_OBJECT 					{}
 	| FK_NAME						{}		
-	| COLUMN						{}
+	| COLUMN						{}	
 //
  ;
 

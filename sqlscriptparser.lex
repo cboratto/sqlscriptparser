@@ -3,7 +3,6 @@
 %}
 %option noyywrap
 %%
-"("												/*ignore*/
 [ ]*(DAT|COD|DES|IND|JSON|XML|IDT|NUM|FLG|NAM)\_[A-Z0-9\_]+ { yylval.sval = strdup(yytext); return COLUMN;}
 "CREATE TABLE"									{ yylval.sval = strdup(yytext); return CREATE_TABLE;}
 "CREATE INDEX"									{ yylval.sval = strdup(yytext); return CREATE_INDEX;}
@@ -15,10 +14,12 @@
 [ ]+CHECK[ ]*									{ yylval.sval = strdup(yytext); return CHECK;}
 "ADD CONSTRAINT"								{ yylval.sval = strdup(yytext); return ADD_CONSTRAINT;}
 "\n" 											{return FIM_COMANDO;} 
+"("												/*ignore*/
 ")"												{}
 "/"												{}
 "'"												{}
 "-"												{}
+"_"												{}
 ";"												{}
 "="												{}
 ":"												{}
@@ -26,6 +27,8 @@
 "<"												{}
 "."												{}
 "*"												{}
-[\sA-Z0-9\_a-z\(\)\,]*							/*ignore*/
+","												{}
+[A-Z0-9]*							/*ignore*/
+
 %%
 
