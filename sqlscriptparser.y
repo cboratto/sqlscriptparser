@@ -112,6 +112,7 @@ instrucao: CREATE_TABLE OWNER_OBJECT FIM_COMANDO  {
 	| FIM_COMANDO 					{} 
 	| OWNER_OBJECT 					{}
 	| FK_NAME						{}		
+	| CHECK_NAME					{}
 	| COLUMN						{}	
 //
  ;
