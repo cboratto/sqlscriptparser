@@ -27,6 +27,8 @@ void changedir(char *);
 %token <sval> UK_NAME
 %token <sval> ADD_CONSTRAINT
 %token <sval> COLUMN
+%token <sval> CREATE_SEQUENCE
+
 
 %token <sval> CHECK
 %token <sval> CHECK_NAME
@@ -155,7 +157,23 @@ instrucao: CREATE_TABLE OWNER_OBJECT FIM_COMANDO  {
 												  strcat(str,"' and t.constraint_name='");
 												  strcat(str,$4);
 												  strcat(str,"' union all ");
-												  printf("\n--ADD CHECK CONSTRAINT\n%s\n",str);												  
+												  printf("\n--ADD CHECK CONSTRAINT\n%s\n",str);											  
+												  }												  
+
+	| CREATE_SEQUENCE OWNER_OBJECT FIM_COMANDO { 
+												  char *owner;
+												  char *object;
+												  owner = strtok ($2,".");
+												  object = strtok (NULL, ".");
+												  char str[1024];
+												  strcpy(str,"select '");
+												  strcat(str,object);
+												  strcat(str,"' as obj, case count(1) when 1 then 'ok' else 'error' end from dba_sequences t where t.sequence_owner='");
+												  strcat(str,owner);
+												  strcat(str,"' and t.sequence_name='");
+												  strcat(str,object);
+												  strcat(str,"' union all ");
+												  printf("\n--CREATE SEQUENCE\n%s\n",str);											  
 												  }												  
 
 												  

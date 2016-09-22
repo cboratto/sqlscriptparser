@@ -16,6 +16,7 @@
 [A-Z\_]+\_CK[0-9]*								{ yylval.sval = strdup(yytext); return CHECK_NAME;}
 [ ]+CHECK[ ]*									{ yylval.sval = strdup(yytext); return CHECK;}
 "ADD CONSTRAINT"								{ yylval.sval = strdup(yytext); return ADD_CONSTRAINT;}
+"CREATE SEQUENCE"								{ yylval.sval = strdup(yytext); return CREATE_SEQUENCE;}
 "\n" 											{return FIM_COMANDO;} 
 "("												/*ignore*/
 ")"												{}
@@ -33,6 +34,6 @@
 ","												{}
 "+" 											{}
 "?" 											{}
-[A-Z0-9a-z]*							/*ignore*/
+[A-Z0-9a-záéíóúãõäëïöüçàèìòùÁÉÍÓÚÃÕÄËÏÖÜÇÀÈÌÒÙ\[\]]*							/*ignore*/
 %%
 
