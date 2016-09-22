@@ -20,7 +20,11 @@ void changedir(char *);
 %token <sval> CREATE_INDEX
 %token <sval> ALTER_TABLE
 %token <sval> FK
+%token <sval> PK
+%token <sval> UK
 %token <sval> FK_NAME
+%token <sval> PK_NAME
+%token <sval> UK_NAME
 %token <sval> ADD_CONSTRAINT
 %token <sval> COLUMN
 
@@ -35,19 +39,27 @@ linhas :
 	| linhas instrucao
  ;
 
+constraint :
+	| FK
+	| PK
+	| UK
+	;
+
 instrucao: CREATE_TABLE OWNER_OBJECT FIM_COMANDO  {   
 													  char *owner;
 													  char *object;
 													  owner = strtok ($2,".");
 													  object = strtok (NULL, ".");
 													  char str[1024];
-													  strcpy(str,"select case count(1) when 1 then 'ok' else 'error' end from dba_tables t where t.owner='");
+													  strcpy(str,"select '");
+													  strcat(str, object);
+													  strcat(str, "' as obj, case count(1) when 1 then 'ok' else 'error' end as status from dba_tables t where t.owner='");
 													  strcat(str,owner);
 													  strcat(str,"' and t.table_name='");
 													  strcat(str,object);
-													  strcat(str,"';");
+													  strcat(str,"' union all");
 													  printf("\n--CREATE TABLE\n%s\n",str);
-													  //printf("select case count(1) when 1 then 'ok' else 'error' end from dba_tables t where t.owner='%s' and t.table_name='%s';\n",owner,object); 
+
 													  }
 													  
 	| CREATE_INDEX OWNER_OBJECT OWNER_OBJECT COLUMN FIM_COMANDO      { 
@@ -56,26 +68,59 @@ instrucao: CREATE_TABLE OWNER_OBJECT FIM_COMANDO  {
 												  owner = strtok ($2,".");
 												  object = strtok (NULL, ".");		
 												  char str[1024];
-												  strcpy(str,"select case count(1) when 1 then 'ok' else 'error' end from dba_indexes t where t.owner='");
+												  strcpy(str,"select '");
+												  strcat(str,object);												  
+												  strcat(str,"' as obj, case count(1) when 1 then 'ok' else 'error' end as status from dba_indexes t where t.owner='");
 												  strcat(str,owner);
 												  strcat(str,"' and t.index_name='");
 												  strcat(str,object);
-												  strcat(str,"';");
+												  strcat(str,"' union all ");
 												  printf("\n--CREATE INDEX\n%s\n",str);
-												  //printf("select case count(1) when 1 then 'ok' else 'error' end from dba_indexes t where t.owner='%s' and t.index_name='%s';\n",owner,object); 
 												  }
-	| ALTER_TABLE OWNER_OBJECT ADD_CONSTRAINT FK_NAME  FK COLUMN OWNER_OBJECT COLUMN FIM_COMANDO { 
+	| ALTER_TABLE OWNER_OBJECT ADD_CONSTRAINT FK_NAME  constraint COLUMN OWNER_OBJECT COLUMN FIM_COMANDO { 
 												  char *owner;
 												  char *object;
 												  owner = strtok ($2,".");
 												  char str[1024];
-												  strcpy(str,"select case count(1) when 1 then 'ok' else 'error' end from dba_constraints t where t.owner='");
+												  strcpy(str,"select '");
+												  strcat(str,$4);
+												  strcat(str,"' obj, case count(1) when 1 then 'ok' else 'error' end as status from dba_constraints t where t.owner='");
 												  strcat(str,owner);
 												  strcat(str,"' and t.constraint_name='");
 												  strcat(str,$4);
-												  strcat(str,"';");
+												  strcat(str,"' union all ");
 												  printf("\n--ADD CONSTRAINT FK\n%s\n",str);
-												  //printf("select case count(1) when 1 then 'ok' else 'error' end from dba_constraints t where t.owner='%s' and t.constraint_name='%s';\n",owner,$4);
+												  
+												  }
+
+	| ALTER_TABLE OWNER_OBJECT ADD_CONSTRAINT PK_NAME constraint COLUMN FIM_COMANDO { 
+												  char *owner;
+												  char *object;
+												  owner = strtok ($2,".");
+												  char str[1024];
+												  strcpy(str,"select '");
+												  strcat(str,$4);
+												  strcat(str,"' as obj, case count(1) when 1 then 'ok' else 'error' end as status from dba_constraints t where t.owner='");
+												  strcat(str,owner);
+												  strcat(str,"' and t.constraint_name='");
+												  strcat(str,$4);
+												  strcat(str,"' union all ");
+												  printf("\n--ADD CONSTRAINT PK\n%s\n",str);
+												  }
+												  
+	| ALTER_TABLE OWNER_OBJECT ADD_CONSTRAINT UK_NAME constraint COLUMN FIM_COMANDO { 
+												  char *owner;
+												  char *object;
+												  owner = strtok ($2,".");
+												  char str[1024];
+												  strcpy(str,"select '");
+												  strcat(str,$4);
+												  strcat(str,"' as obj, case count(1) when 1 then 'ok' else 'error' end as status from dba_constraints t where t.owner='");
+												  strcat(str,owner);
+												  strcat(str,"' and t.constraint_name='");
+												  strcat(str,$4);
+												  strcat(str,"' union all ");
+												  printf("\n--ADD CONSTRAINT UK\n%s\n",str);
 												  }
 
 	| ALTER_TABLE OWNER_OBJECT COLUMN FIM_COMANDO { char *owner;
@@ -83,15 +128,19 @@ instrucao: CREATE_TABLE OWNER_OBJECT FIM_COMANDO  {
 												  owner = strtok ($2,".");
 												  object = strtok (NULL, ".");
 												  char str[1024];
-												  strcpy(str,"select case count(1) when 1 then 'ok' else 'error' end from dba_tab_columns t where t.owner='");
+												  strcpy(str,"select '");
+												  strcat(str,object);
+												  strcat(str,"-");
+												  strcat(str,$3);												  
+												  strcat(str,"' as obj, case count(1) when 1 then 'ok' else 'error' end from dba_tab_columns t where t.owner='");
 												  strcat(str,owner);
 												  strcat(str,"' and t.table_name='");
 												  strcat(str,object);
-												  strcat(str,"' and t.column_name='");
+												  strcat(str,"' and t.column_name=trim('");
 												  strcat(str,$3);
-												  strcat(str,"';");
+												  strcat(str,"') union all ");
 												  printf("\n--ADD COLUMN\n%s\n",str);
-												  //printf("select case count(1) when 1 then 'ok' else 'error' end from dba_tab_columns t where t.owner='%s' and t.table_name='%s' and t.column_name='%s';\n",owner,object,$3);
+
 												  }
 	
 	| ALTER_TABLE OWNER_OBJECT ADD_CONSTRAINT CHECK_NAME CHECK COLUMN FIM_COMANDO { 
@@ -99,13 +148,14 @@ instrucao: CREATE_TABLE OWNER_OBJECT FIM_COMANDO  {
 												  char *object;
 												  owner = strtok ($2,".");
 												  char str[1024];
-												  strcpy(str,"select case count(1) when 1 then 'ok' else 'error' end from dba_constraints t where t.owner='");
+												  strcpy(str,"select '");
+												  strcat(str,$4);
+												  strcat(str,"' as obj, case count(1) when 1 then 'ok' else 'error' end from dba_constraints t where t.owner='");
 												  strcat(str,owner);
 												  strcat(str,"' and t.constraint_name='");
 												  strcat(str,$4);
-												  strcat(str,"';");
-												  printf("\n--ADD CHECK CONSTRAINT\n%s\n",str);
-												  //printf("select case count(1) when 1 then 'ok' else 'error' end from dba_constraints t where t.owner='%s' and t.constraint_name='%s';\n",owner,$4);
+												  strcat(str,"' union all ");
+												  printf("\n--ADD CHECK CONSTRAINT\n%s\n",str);												  
 												  }												  
 
 												  
@@ -128,5 +178,5 @@ int main(int argc, char **argv)
 /* função usada pelo bison para dar mensagens de erro */
 void yyerror(char *msg)
 {
- fprintf(stderr, "erro: %s \n", msg);
+ fprintf(stderr, "\ERRO: %s \n", msg);
 }
