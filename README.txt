@@ -1,4 +1,4 @@
-SQL Script Parser
+*SQL Script Parser*
 Mini project built under flex-bison to generate script validation for Oracle DDL.
 
 Documentation
