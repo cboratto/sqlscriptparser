@@ -15,5 +15,12 @@ gcc sqlscriptparser.tab.c lex.yy.c -o sqlparser
 Redirect stdout to your bin so it can process caracter stream.
 
 ```
-sqlparser < file.txt
+# Passa arquivo como parametro
+sqlparser /fool/bar/file.txt
+
+# Printa na tela os comandos de validação
+sqlparser /fool/bar/file.txt -p
+
+# Append dos comandos no arquivo passado como parametro
+sqlparser /fool/bar/file.txt -a
 ```
