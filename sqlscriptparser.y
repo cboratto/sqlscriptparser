@@ -6,7 +6,20 @@
 void yyerror(char *); 
 extern char * yytext;
 
-void changedir(char *);
+//Referencia externa
+extern FILE * yyin;
+//Apontamento para arquivo
+char fullfilename[2048];
+
+//Print na tela o comando
+int printOnScreen=0;
+//Realizar o append
+int appendStmt=0;
+
+//Primeira vez a imprimir script validador
+int primeiraVez=1;
+
+void writeStmt(char *stmt, char *tipoStmt);
 %}
 
 %union {
@@ -61,9 +74,14 @@ instrucao: CREATE_TABLE OWNER_OBJECT FIM_COMANDO  {
 													  strcat(str,owner);
 													  strcat(str,"') and t.table_name=upper('");
 													  strcat(str,object);
-													  strcat(str,"') union all");
-													  printf("\n--CREATE TABLE\n%s\n",str);
-
+													  strcat(str,"') union all");													  													  
+													  if (printOnScreen) {
+														printf("\n--CREATE TABLE\n%s\n",str);
+													  }				
+													  if (appendStmt) {
+														 writeStmt(str,"--CREATE TABLE");
+													  }													  
+														
 													  }
 	| ALTER_TABLE OWNER_OBJECT ADD_CONSTRAINT CHECK_NAME CHECK COLUMN FIM_COMANDO { 
 												  char *owner;
@@ -76,8 +94,14 @@ instrucao: CREATE_TABLE OWNER_OBJECT FIM_COMANDO  {
 												  strcat(str,owner);
 												  strcat(str,"') and t.constraint_name=upper('");
 												  strcat(str,$4);
-												  strcat(str,"') union all ");
-												  printf("\n--ADD CHECK CONSTRAINT\n%s\n",str);		
+												  strcat(str,"') union all ");												  
+												  if (printOnScreen) {
+													 printf("\n--ADD CHECK CONSTRAINT\n%s\n",str);
+												  }				
+												  if (appendStmt) {
+													 writeStmt(str,"--ADD CHECK CONSTRAINT");
+												  }
+												  
 												  }		
 												  
 	| ALTER_TABLE OWNER_OBJECT DROP_CONSTRAINT CHECK_NAME FIM_COMANDO {}		
@@ -94,8 +118,14 @@ instrucao: CREATE_TABLE OWNER_OBJECT FIM_COMANDO  {
 												  strcat(str,owner);
 												  strcat(str,"') and t.index_name=upper('");
 												  strcat(str,object);
-												  strcat(str,"') union all ");
-												  printf("\n--CREATE INDEX\n%s\n",str);
+												  strcat(str,"') union all ");												  
+												  if (printOnScreen) {
+													 printf("\n--CREATE INDEX\n%s\n",str);
+												  }
+												  if (appendStmt) {
+													 writeStmt(str,"--CREATE INDEX");
+												  }
+												  
 												  }
 	| ALTER_TABLE OWNER_OBJECT ADD_CONSTRAINT FK_NAME  constraint COLUMN OWNER_OBJECT COLUMN FIM_COMANDO { 
 												  char *owner;
@@ -108,8 +138,14 @@ instrucao: CREATE_TABLE OWNER_OBJECT FIM_COMANDO  {
 												  strcat(str,owner);
 												  strcat(str,"') and t.constraint_name=upper('");
 												  strcat(str,$4);
-												  strcat(str,"') union all ");
-												  printf("\n--ADD CONSTRAINT FK\n%s\n",str);
+												  strcat(str,"') union all ");												  
+												  if (printOnScreen) {
+													 printf("\n--ADD CONSTRAINT FK\n%s\n",str);
+												  }
+												  if (appendStmt) {
+													 writeStmt(str,"--ADD CONSTRAINT FK");
+												  }
+												  
 												  
 												  }
 
@@ -124,8 +160,14 @@ instrucao: CREATE_TABLE OWNER_OBJECT FIM_COMANDO  {
 												  strcat(str,owner);
 												  strcat(str,"') and t.constraint_name=upper('");
 												  strcat(str,$4);
-												  strcat(str,"') union all ");
-												  printf("\n--ADD CONSTRAINT PK\n%s\n",str);
+												  strcat(str,"') union all ");												  
+												  if (printOnScreen) {
+													 printf("\n--ADD CONSTRAINT PK\n%s\n",str);
+												  }	
+												  if (appendStmt) {
+													 writeStmt(str,"--ADD CONSTRAINT PK");
+												  }
+												  
 												  }
 												  
 	| ALTER_TABLE OWNER_OBJECT ADD_CONSTRAINT UK_NAME constraint COLUMN FIM_COMANDO { 
@@ -139,8 +181,14 @@ instrucao: CREATE_TABLE OWNER_OBJECT FIM_COMANDO  {
 												  strcat(str,owner);
 												  strcat(str,"') and t.constraint_name=upper('");
 												  strcat(str,$4);
-												  strcat(str,"') union all ");
-												  printf("\n--ADD CONSTRAINT UK\n%s\n",str);
+												  strcat(str,"') union all ");												  
+												  if (printOnScreen) {
+													 printf("\n--ADD CONSTRAINT UK\n%s\n",str);
+												  }	
+												  if (appendStmt) {
+													writeStmt(str,"--ADD CONSTRAINT UK");  
+												  }
+												  
 												  }
 
 	| ALTER_TABLE OWNER_OBJECT COLUMN FIM_COMANDO { char *owner;
@@ -159,7 +207,13 @@ instrucao: CREATE_TABLE OWNER_OBJECT FIM_COMANDO  {
 												  strcat(str,"') and t.column_name=upper(trim('");
 												  strcat(str,$3);
 												  strcat(str,"')) union all ");
-												  printf("\n--ADD COLUMN\n%s\n",str);
+												  if (printOnScreen) {
+													 printf("\n--ADD COLUMN\n%s\n",str);
+												  }			
+												  if (appendStmt) {
+													  writeStmt(str,"--ADD COLUMN");
+												  }
+												  
 
 												  }
 	
@@ -178,8 +232,14 @@ instrucao: CREATE_TABLE OWNER_OBJECT FIM_COMANDO  {
 												  strcat(str,object);
 												  strcat(str,"' and t.column_name=upper(trim('");
 												  strcat(str,$3);
-												  strcat(str,"')) union all ");
-												  printf("\n--RENAME COLUMN\n%s\n",str);
+												  strcat(str,"')) union all ");												  
+												  if (printOnScreen) {
+													 printf("\n--RENAME COLUMN\n%s\n",str);
+												  }
+												  if (appendStmt) {
+													 writeStmt(str,"--RENAME COLUMN");
+												  }
+												  
 												  }
 	
 										 
@@ -195,8 +255,14 @@ instrucao: CREATE_TABLE OWNER_OBJECT FIM_COMANDO  {
 												  strcat(str,owner);
 												  strcat(str,"') and t.sequence_name=upper('");
 												  strcat(str,object);
-												  strcat(str,"') union all ");
-												  printf("\n--CREATE SEQUENCE\n%s\n",str);											  
+												  strcat(str,"') union all ");												  
+												  if (printOnScreen) {
+													 printf("\n--CREATE SEQUENCE\n%s\n",str);
+												  }
+												  if (appendStmt) {
+													 writeStmt(str,"--CREATE SEQUENCE");
+												  }
+												  
 												  }												  
 
 												  
@@ -212,8 +278,38 @@ instrucao: CREATE_TABLE OWNER_OBJECT FIM_COMANDO  {
 
 int main(int argc, char **argv)
 {
-  
- return yyparse();
+
+	//Copiando	
+	int i;	
+	for (i=1; i < argc; i++) {	
+		if (strcmp("-p",argv[i])==0 ) {
+			printOnScreen=1;
+		} else if (strcmp("-a",argv[i])==0 ) {
+			appendStmt=1;
+		}else {
+			strcpy(fullfilename, argv[i]);	
+		}		
+	}
+
+	yyin = fopen(fullfilename, "r");
+	return yyparse();
+}
+
+/*********************************************
+	Funcao de append
+*********************************************/
+void writeStmt(char *stmt, char *tipoStmt) {	
+
+   	FILE * fp;		
+	fp = fopen(fullfilename, "a");
+	
+	if (primeiraVez==1) {
+		fprintf(fp, "\n/*********************************\n\tSCRIPT VALIDACAO\n*********************************/\n",tipoStmt, stmt);
+		primeiraVez=0;
+	}
+	fprintf(fp, "%s\n%s\n",tipoStmt, stmt);
+	fclose(fp);
+		
 }
 
 /* função usada pelo bison para dar mensagens de erro */
